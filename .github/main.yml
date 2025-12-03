@@ -1,0 +1,48 @@
+name: Appium Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-appium-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      # Agar Appium docker me run kar rahe ho, yahan define kar sakte ho
+      # appium:
+      #   image: appium/appium
+      #   ports:
+      #     - 4723:4723
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: temurin
+        java-version: 17
+
+    - name: Install Android SDK
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget unzip lib32stdc++6 lib32z1
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        unzip cmdline-tools.zip -d $HOME/Android
+        yes | $HOME/Android/cmdline-tools/bin/sdkmanager --licenses
+        $HOME/Android/cmdline-tools/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+    - name: Start Appium Server
+      run: |
+        npm install -g appium
+        appium &
+
+    - name: Run Tests
+      run: |
+        mvn clean test
